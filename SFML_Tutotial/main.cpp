@@ -133,8 +133,6 @@ public:
 
     friend const bool isCollide(Entity* a, Entity* b);
 
-    int main();
-
     void draw(RenderWindow& app)
     {
         anim_.get_sprite() -> setPosition(x, y);
