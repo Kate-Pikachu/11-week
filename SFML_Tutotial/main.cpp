@@ -31,18 +31,19 @@ int randomint(int min, int max) {
 
 class Animation
 {
-public:
+private:
     float Frame, speed, time;
     Sprite sprite;
     std::vector<IntRect> frames;
 
+public:
     Animation() {}
 
     Sprite* get_sprite() {
         return &sprite;
     }
 
-    Animation(Texture& t, int x, int y, int w, int h, int count, float Speed)
+    explicit Animation(Texture& t, int x, int y, int w, int h, int count, float Speed)
     {
         Frame = 0;
         time = 0;
@@ -65,7 +66,7 @@ public:
         int n = frames.size();
         if (Frame >= n) Frame -= n;
 
-        int m = std::trunc(Frame);
+        int m = static_cast<int>(Frame);
         if (n > 0) sprite.setTextureRect(frames[m]);
     }
 
@@ -87,7 +88,7 @@ public:
     Animation anim_;
 
 
-    Entity(Animation& a, int X, int Y, float Angle = 0, int radius = 1, bool Life = 1, double dx_ = 0, double dy_ = 0, Name name = Name::none)
+    explicit Entity(Animation& a, int X, int Y, float Angle = 0, int radius = 1, bool Life = 1, double dx_ = 0, double dy_ = 0, Name name = Name::none)
     {
         anim_ = a;
         x = X; y = Y;
@@ -113,19 +114,11 @@ public:
     }
 
 
-    virtual void update() {};
+    virtual void update() = 0;
 
     void death(bool Life) {
         life = Life;
     }
-
-    const bool get_life() { return life; }
-
-    const int get_r() { return R; }
-
-    const int get_x() { return x; }
-
-    const int get_y() { return y; }
 
     Animation* get_anim() { return &anim_; }
 
@@ -140,7 +133,7 @@ public:
         app.draw(*anim_.get_sprite());
     }
 
-    virtual ~Entity() {};
+    virtual ~Entity() = default;
 };
 
 
@@ -155,7 +148,7 @@ const bool isCollide(Entity* a, Entity* b)
 class asteroid : public Entity
 {
 public:
-    asteroid(Animation& a, int X, int Y, float Angle = 0, int radius = 1, bool Life = 1) :
+    explicit asteroid(Animation& a, int X, int Y, float Angle = 0, int radius = 1, bool Life = 1) :
         Entity(a, X, Y, Angle, radius, Life) {
 
         std::default_random_engine dre;
@@ -169,8 +162,8 @@ public:
 
     void update() override
     {
-        x += trunc(dx);
-        y += trunc(dy);
+        x += static_cast<int>(dx);
+        y += static_cast<int>(dy);
 
         if (x > W) x = 0;  
         if (x < 0) x = W;
@@ -184,13 +177,13 @@ public:
 class bullet : public Entity
 {
 public:
-    bullet(Animation& a, int X, int Y, float Angle = 0, int radius = 1, bool Life = 1) :
+    explicit bullet(Animation& a, int X, int Y, float Angle = 0, int radius = 1, bool Life = 1) :
         Entity(a, X, Y, Angle, radius, Life) {      
 
         name_ = Name::bullet;
     }
 
-    void  update() override
+    void update() override
     {
         dx = cos(angle * DEGTORAD) * 6;
         dy = sin(angle * DEGTORAD) * 6;
@@ -253,8 +246,8 @@ public:
         }
         else
         {
-            dx *= 0.99;
-            dy *= 0.99;
+            dx *= num;
+            dy *= num;
         }
 
         float speed = sqrt(dx * dx + dy * dy);
@@ -322,9 +315,6 @@ public:
 
 int main()
 {
-
-    Sprite game_over;
-    sf::Font font;
     Text text_points;
 
     srand(time(0));
@@ -334,15 +324,15 @@ int main()
 
     Texture t1, t2, t3, t4, t5, t6, t7, t8, t9;
 
-    t1.loadFromFile("D:/4 сем/вижуал/11 задание/Project/Debug/images/spaceship.png");
-    t2.loadFromFile("D:/4 сем/вижуал/11 задание/Project/Debug/images/background.jpg");
-    t3.loadFromFile("D:/4 сем/вижуал/11 задание/Project/Debug/images/explosions/type_C.png");
-    t4.loadFromFile("D:/4 сем/вижуал/11 задание/Project/Debug/images/rock.png");
-    t5.loadFromFile("D:/4 сем/вижуал/11 задание/Project/Debug/images/fire_blue.png");
-    t6.loadFromFile("D:/4 сем/вижуал/11 задание/Project/Debug/images/rock_small.png");
-    t7.loadFromFile("D:/4 сем/вижуал/11 задание/Project/Debug/images/explosions/type_B.png");
-    t8.loadFromFile("D:/4 сем/вижуал/11 задание/Project/Debug/images/health_points.png");
-    t9.loadFromFile("D:/4 сем/вижуал/11 задание/Project/Debug/images/game_over.png");
+    t1.loadFromFile("...\\images\\spaceship.png");
+    t2.loadFromFile("..\\images\\background.jpg");
+    t3.loadFromFile("..\\images\\explosions/type_C.png");
+    t4.loadFromFile("..\\images\\rock.png");
+    t5.loadFromFile("..\\images\\fire_blue.png");
+    t6.loadFromFile("..\\images\\rock_small.png");
+    t7.loadFromFile("..\\images\\explosions\\type_B.png");
+    t8.loadFromFile("..\\images\\health_points.png");
+    t9.loadFromFile("..\\images\\game_over.png");
 
     t1.setSmooth(true);
     t2.setSmooth(true);
@@ -356,33 +346,39 @@ int main()
     Animation sPlayer(t1, 40, 0, 40, 40, 1, 0);
     Animation sPlayer_go(t1, 40, 40, 40, 40, 1, 0);
     Animation sExplosion_ship(t7, 0, 0, 192, 192, 64, 0.5);
-   // Animation background(t2);
+    //Animation background(t2);
     Animation health_points(t8, 0, 0, 225, 225, 1, 0);
     //Animation game_over(t9);
     app.setFramerateLimit(60);
 
 
 
-    font.loadFromFile("D:/4 сем/вижуал/11 задание/Project/Debug/images/font.h");
-    text_points.setFont(font);
-    text_points.setFillColor(sf::Color(255, 0, 0, 200));
-    text_points.setOutlineColor(sf::Color::Black);
+    text_points.setFillColor(Color(255, 0, 0, 200));
+    text_points.setOutlineColor(Color::Black);
     text_points.setOutlineThickness(2);
     text_points.setCharacterSize(40);
-    text_points.setStyle(sf::Text::Regular);
+    text_points.setStyle(Text::Regular);
     text_points.setString(std::to_string(0));
     text_points.setPosition(20, 0);
     app.setFramerateLimit(60);
 
-    std::list<Entity*> entities;
+    std::list<std::shared_ptr<Entity>> entities;
 
     for (int i = 0; i < 15; i++)
     {
-        asteroid* a = new asteroid(sRock, randomint(0, W), randomint(0, H), randomint(0, 360), 25);
+
+        std::random_device rd;
+        std::mt19937 eng(rd());
+        std::uniform_int_distribution<int> ran_w(0, W);
+        std::uniform_int_distribution<int> ran_h(0, H);
+        std::uniform_int_distribution<int> ran(0, 360);
+
+        std::shared_ptr<asteroid> a(new asteroid(sRock, ran_w(eng), ran_h(eng), ran(eng), 25));
         entities.push_back(a);
     }
 
-    player* p = new player(sPlayer, W / 2, H / 2, 0, 20);
+    std::shared_ptr<player> p(new player(sPlayer, W / 2, H / 2, 0, 20));
+    
     entities.push_back(p);
 
 
@@ -397,14 +393,14 @@ int main()
             if (event.type == Event::KeyPressed)
                 if (event.key.code == Keyboard::Space)
                 {
-                    bullet* b = new bullet(sBullet, p -> get_x(), p -> get_y(), p -> get_angle(), 10);
-                    entities.push_back(b);
+                    std::shared_ptr<bullet> b(new bullet(sBullet, p->x, p->y, p->angle, 10));                    entities.push_back(b);
                 }
 
         }
 
         if (Keyboard::isKeyPressed(Keyboard::Right)) p -> c_angle(3);
         if (Keyboard::isKeyPressed(Keyboard::Left))  p -> c_angle(-3);
+
         if (Keyboard::isKeyPressed(Keyboard::Up)) p -> c_thrust(true);
         else p->c_thrust(false);
 
@@ -418,15 +414,20 @@ int main()
                         a -> death(false);
                         b -> death(false);
                         p -> inc_points();
+                        text_points.setString(std::to_string(p->get_points()));
 
-                        Entity* e = new Entity(sExplosion, a->get_x(), a->get_y(), Name::explosion);
+                        std::shared_ptr<bullet> e(new bullet(sExplosion, a->x, a->y));                        entities.push_back(e);
                         entities.push_back(e);
 
 
-                        if (a->get_r() == 25) {
+                        if (a->R == 25) {
                             for (int i = 0; i < 2; i++)
                             {
-                                Entity* e = new asteroid(sRock_small, a->get_x(), a->get_y(), randomint(0, 360), 15);
+                                std::random_device rd;
+                                std::mt19937 eng(rd());
+                                std::uniform_int_distribution<int> ran(0, 360);
+
+                                std::shared_ptr<Entity> e(new asteroid(sRock_small, a->x, a->y, ran(eng), 15));
                                 entities.push_front(e);
                             }
                         }
@@ -437,12 +438,12 @@ int main()
                     if (isCollide(a, b)) {
                         b -> death(false);
 
-                        Entity* k = new Entity(sExplosion_ship, a->get_x(), a->get_y(), Name::explosion);
-                        entities.push_back(k);
+                        std::shared_ptr<player> k(new player(sExplosion_ship, a->x, a->y));
+                        entities.push_front(k);
 
                         if (p -> get_hp() > 1)
                         {
-                            p -> settings(sPlayer, W / 2, H / 2, 0, 20);
+                            p = new player(sPlayer, W / 2, H / 2, 0, 20);
                             p -> set_dx(); 
                             p -> set_dy();
                             p -> dec_hp();
@@ -468,12 +469,6 @@ int main()
         {
             app.clear();
             app.draw(background);
-            for (int i = 0; i < 255; i = i + 7) {
-
-                game_over.setColor(Color(255, 255, 255, i));
-                app.draw(game_over);
-                app.display();
-            }
         }
 
 
@@ -489,24 +484,23 @@ int main()
 
         if (randomint(0, 150) == 0)
         {
-            asteroid* a = new asteroid(sRock, randomint(0, W), randomint(0, H), randomint(0, 360), 25);
+            std::shared_ptr<asteroid> a(new asteroid(sRock, randomint(0, W), randomint(0, H), randomint(0, 360), 25));
             entities.push_back(a);
         }
 
         for (auto i = entities.begin(); i != entities.end();)
         {
-            Entity* e = *i;
+            std::shared_ptr<Entity> e = *i;
 
             e -> update();
             e -> get_anim()->update();;
 
-            if (e -> get_life() == false) { 
-                i = entities.erase(i); 
-                delete e; }
+            if (e->life == false) {
+                i = entities.erase(i);
+            }
             else i++;
         }
 
-        //////draw//////
         Health_Points* hp;
 
 
